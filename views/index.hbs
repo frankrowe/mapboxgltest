@@ -1,0 +1,67 @@
+<div id='map'></div>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiZnNydyIsImEiOiJjaWd0aXpqa3MwN3RrdHBrbm5qYjR1NThwIn0.jrt64Q-kjEYFrETiU0Tixw';
+
+
+var style =
+{
+  "version": 8,
+  "sources": {
+    "osm": {
+      "type": "vector",
+      "tiles": ["https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt?api_key=vector-tiles-LM25tq4"]
+    },
+    "fiber": {
+      "type": "vector",
+      "tiles": ["http://localhost:3001/vector-tiles/fiber/{z}/{x}/{y}.mvt"]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "paint": { "background-color": "#EDEADE" },
+      "type": "background"
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "osm",
+      "source-layer": "water",
+      "filter": ["==", "$type", "Polygon"],
+      "paint": {
+          "fill-color": "#3887be"
+      }
+    },
+    {
+      "id": "fiber",
+      "source": "fiber",
+      "source-layer": "fiber",
+      "paint": {
+        "line-color": "#f00",
+        "line-width": 3
+      },
+      "type" : "line",
+      "interactive": true
+    }
+  ]
+}
+
+var map = new mapboxgl.Map({
+    container: 'map', // container id
+    //style: 'mapbox://styles/mapbox/streets-v8', //stylesheet location
+    style: style,
+    center: [-74.50, 40], // starting position
+    zoom: 9 // starting zoom
+})
+
+map.on('click', function(e) {
+  console.log(e.point);
+  map.featuresAt(e.point, {radius: 10}, function(err, features) {
+    console.log(err);
+    console.log(features);
+      if (features && features.length > 0) {
+        //document.getElementById('feature-info').innerHTML = features[0].properties["ANDAMAL_1T"];
+      }
+  })
+})
+</script>
