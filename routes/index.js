@@ -3,6 +3,7 @@ var zlib = require('zlib')
 var mapnik = require('mapnik')
 mapnik.register_default_input_plugins();
 var SphericalMercator = require('sphericalmercator')
+var bboxpolygon = require('turf-bbox-polygon')
 var mercator = new SphericalMercator({
   size: 256 //tile size
 })
@@ -12,19 +13,6 @@ var conString = "postgres://fsrowe:password@localhost/fsrowe";
 
 var VectorTile = require('vector-tile').VectorTile;
 var Protobuf = require('pbf');
-
-var makeWKTfromBounds = function(bounds){
-  bounds.map(function(corner){
-    return parseFloat(corner)
-  })
-  var wkt = 'POLYGON((' +
-    bounds[0] + ' ' + bounds[1] + ', ' +
-    bounds[0] + ' ' + bounds[3] + ', ' +
-    bounds[2] + ' ' + bounds[3] + ', ' +
-    bounds[2] + ' ' + bounds[1] + ', ' +
-    bounds[0] + ' ' + bounds[1] + '))'
-  return wkt
-}
 
 var toGeoJSON = function(json) {
   var geojson = {type: "FeatureCollection", features: []}
@@ -52,8 +40,8 @@ router.get('/vector-tiles/:layername/:z/:x/:y.mvt', function(req, res) {
     false,
     '4326'
   )
-  var wkt = makeWKTfromBounds(bbox)
-  var bounds = 'ST_GeometryFromText(\'' + wkt + '\', 4030)'
+  var poly = JSON.stringify(bboxpolygon(bbox).geometry)
+  var bounds = 'ST_SetSRID(ST_GeomFromGeoJSON(\'' + poly + '\'), 4030)'
   var sql = 'select st_asgeojson(geometry) as geojson from zayo_duluth_to_st_paul'
   sql += ' where st_intersects(geometry, ' + bounds + ')'
   pg.connect(conString, function(err, client, done) {
